@@ -1,0 +1,19 @@
+{
+  "name": "mala-vida-barbers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de citas de barbería con React, Express y MySQL",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "setup": "npm --prefix backend ci && npm --prefix frontend ci",
+    "db": "docker compose up -d --wait",
+    "dev": "node scripts/dev.cjs",
+    "build": "npm --prefix frontend run build",
+    "start": "node backend/server.js",
+    "test": "npm --prefix backend test",
+    "test:browser": "node scripts/browser-tests.cjs",
+    "check": "npm --prefix frontend run lint && npm run build && npm test"
+  }
+}

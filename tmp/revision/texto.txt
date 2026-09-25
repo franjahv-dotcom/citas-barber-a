@@ -1,0 +1,110 @@
+0: 
+1: Sistema web de gestión y control de citas para una barbería
+2: Diseño, desarrollo, implementación y evaluación del prototipo
+3: 
+4: Alumno  
+5: Fecha  ..  de septiembre de 2026
+6: 
+7: Propósito del documento
+8: Presentar la segunda etapa del proyecto y reunir los materiales necesarios para elaborar el informe, la presentación y la demostración. El desarrollo toma como punto de partida los requerimientos de la primera entrega.
+9: Resultado principal
+10: El prototipo contiene citas/reservas, administración de la agenda, jornadas, bloqueos e historial. La ejecución de verificación registrada reporta 27 resultados aprobados y ningún fallo; ese total incluye 26 casos y la evaluación son en un entorno local controlado.
+11: Índice e introducción
+12: 
+13: Introducción
+14: Una barbería necesita conocer qué trabajador puede atender, cuánto dura cada servicio y qué espacios siguen libres. Si esa información se reparte entre mensajes y anotaciones, es posible aceptar citas incompatibles o perder el seguimiento de un cambio. La primera entrega definió ese problema, sus actores y los requisitos del sistema.
+15: En esta segunda etapa se implementó un prototipo web. El cliente consulta servicios y horarios y reserva sin crear una cuenta. El administrador inicia sesión para consultar y modificar la agenda, mantener los catálogos y resolver cancelaciones, reprogramaciones y ausencias.
+16: El objetivo de esta fase es comprobar que el diseño se traduce en operaciones consistentes y verificables. La misión principal es conservar una agenda válida aun cuando varias personas soliciten el mismo horario.
+17: Alcance y condiciones
+18: El proyecto contempla servicios, barberos, clientes, citas, jornadas, descansos, bloqueos y acceso administrativo. Se mantienen fuera del alcance los pagos en línea, el inventario, la nómina, los recordatorios automáticos y las cuentas individuales de barberos. Los horarios y las políticas iniciales son supuestos del prototipo académico; no se presentan como resultados de entrevistas con un negocio real.
+19: 
+20: Diseño de la arquitectura
+21: Separación de responsabilidades
+22: El sistema utiliza una arquitectura cliente servidor. React presenta los formularios y la agenda; Node.js con Express recibe las solicitudes y aplica las reglas; MySQL conserva los datos registrados. El navegador se comunica con la API y no entra directamente a la base de datos.
+23: 
+24: Figura 1. Arquitectura implementada. La interfaz usa HTTP y JSON; el servidor consulta MySQL mediante SQL parametrizado.
+25: 
+26: Organización de los módulos
+27: El servidor separa validaciones generales, autenticación, acceso a datos, reglas de agenda, inicialización y rutas. En la interfaz, cada función administrativa tiene un componente propio y comparte utilidades para solicitudes, mensajes, cuadros de diálogo y estados de carga. Esta organización facilita revisar una regla sin repetirla en cada pantalla.
+28: Acceso y comunicación
+29: La consulta pública devuelve servicios, barberos e intervalos disponibles, sin exponer nombres ni teléfonos de otros clientes. La agenda y las operaciones de administración requieren una sesión vigente. Las contraseñas se almacenan mediante scrypt con una sal aleatoria; el navegador recibe una cookie de sesión HttpOnly y SameSite Strict. La documentación de Node.js fundamenta el uso de scrypt como función de derivación de contraseñas [3].
+30: En la ejecución local, el servidor entrega la interfaz y la API en la misma dirección. Para desarrollo, Vite redirige las solicitudes de la API al servidor. Esta separación permite trabajar en la interfaz sin cambiar las reglas de negocio.
+31: 
+32: Diseño de procesos y reglas
+33: La disponibilidad mostrada al cliente es orientativa hasta confirmar. El servidor repite la validación dentro de una transacción, de modo que consultar un horario libre no garantiza que continúe libre cuando se intente guardar.
+34: 
+35: Figura 2. Reserva y respuesta ante un rechazo. El camino inferior izquierdo corresponde a una validación fallida.
+36: Regla de conflicto
+37: Existe un cruce si inicio_nueva < fin_existente y fin_nueva > inicio_existente para el mismo barbero y una cita pendiente o confirmada. Los límites pueden tocarse: una cita que termina a las 10:40 permite iniciar otra a las 10:40. El intervalo completo debe caber en la jornada y excluir descansos y bloqueos.
+38: Control de solicitudes simultáneas
+39: Las escrituras de agenda y configuración obtienen un bloqueo sobre una fila de control mediante SELECT FOR UPDATE. Solo después se revisa y guarda la cita. Las otras operaciones esperan, vuelven a consultar los datos y rechazan el horario si ya está ocupado. El bloqueo se conserva hasta confirmar o revertir la transacción. Esta decisión favorece la consistencia; también serializa las escrituras y limita la escalabilidad del prototipo.
+40: Cambios y estados
+41: La reprogramación valida el nuevo intervalo antes de modificar el registro. Si falla, la cita original permanece intacta. Cancelar conserva el historial y libera el espacio. Una cita confirmada puede completarse después de su hora de fin o marcarse como ausencia después de su inicio. El flujo público confirma directamente; el estado pendiente existe en el modelo y sus transiciones, pero no se ofrece un formulario público para crearlo. Este es un ajuste explícito frente al recorrido habitual previsto en la primera entrega.
+42: 
+43: Diseño de la base de datos
+44: El modelo relacional separa los catálogos, la operación diaria y los registros de seguridad. Cada cita referencia un servicio, un barbero y, en los registros nuevos, un cliente. Las claves foráneas conservan esas relaciones; las bajas de catálogo se realizan mediante el estado activo.
+45: 
+46: Figura 3. Relaciones principales. Cada flecha va de la entidad a los registros asociados y representa una relación de uno a muchos.
+47: Decisiones de persistencia
+48: La cita guarda su inicio y fin calculados al reservar. Editar la duración de un servicio afecta las reservas nuevas, no desplaza los intervalos anteriores. El nombre y teléfono también se conservan en la cita como datos registrados en esa operación. El teléfono no es único: personas con nombres diferentes pueden compartirlo. Una coincidencia exacta de nombre y teléfono se reutiliza, por lo que identificar homónimos con el mismo número requiere revisión administrativa.
+49: Las jornadas admiten varios periodos por barbero y día. Los espacios entre periodos son descansos; periodos adyacentes se interpretan como una jornada continua. Los bloqueos tienen fecha inicial y final y pueden abarcar varios días. Si afectan citas existentes, se señalan para resolución sin eliminarlas.
+50: La estructura se completa con admins, admin_sessions, appointment_events, schedule_mutex y migrations. Los índices de agenda y búsqueda apoyan las consultas habituales. La inicialización migra la estructura anterior y relaciona sus citas con clientes sin borrar los registros existentes.
+51: 
+52: Diseño de la interfaz
+53: La interfaz mantiene la identidad visual de Mala Vida Barbers con fondo oscuro, acentos dorados y controles de contraste visible. La pantalla pública reúne catálogo, selección de servicio y trabajador, fecha, horarios disponibles y datos de contacto. La confirmación muestra el número de reserva y el intervalo asignado.
+54: 
+55: Figura 4. Formulario real durante la prueba automatizada. Los datos visibles son ficticios.
+56: Administración y prevención de errores
+57: El panel organiza agenda, clientes, servicios, barberos, jornadas, bloqueos y cuenta. Los filtros permiten localizar citas por fecha, trabajador, estado, nombre o teléfono. Cancelar y cambiar un estado requieren confirmación; los mensajes distinguen un conflicto de una operación guardada. Las citas afectadas por un bloqueo o una jornada modificada muestran una advertencia.
+58: La versión móvil distribuye formularios y tarjetas en una columna. Se verificó que no apareciera desplazamiento horizontal a 390 por 844 píxeles. Los controles tienen etiquetas y enfoque visible, y los estados se identifican con texto además del color. Estas comprobaciones no sustituyen una evaluación de accesibilidad ni una prueba de uso con participantes.
+59: 
+60: Desarrollo e implementación
+61: Tecnologías y construcción
+62: Se implementó el cliente con React, Vite y Tailwind CSS; el servidor con JavaScript, Node.js y Express; y la persistencia con MySQL mediante mysql2. Docker conserva la base en un volumen. El desarrollo convierte los requisitos en módulos funcionales: reserva, administración, configuración e historial, seguidos de pruebas y correcciones.
+63: 
+64: La primera parte del proyecto propuso cuatro iteraciones de dos semanas y herramientas de apoyo como Trello, Figma y Visual Paradigm. La evidencia disponible aquí corresponde al código, diagramas de documentación y pruebas ejecutadas. No se atribuyen fechas de sprints, entrevistas ni entregables de esas herramientas que no estén respaldados por registros.
+65: Integración y conservación de datos
+66: La preparación inicial crea las tablas que faltan, adapta la estructura previa y registra la migración para evitar repetir la carga. Las consultas utilizan parámetros y validan identificadores, fechas, teléfono y duración. Las operaciones que afectan la agenda comparten el mismo control transaccional. Se verificó que repetir la inicialización no duplicara servicios ni jornadas.
+67: Configuración de demostración
+68: Se utiliza la hora de Ciudad de México. La jornada inicial es de lunes a sábado, de 10:00 a 14:00 y de 15:00 a 20:00; cada trabajador puede tener una configuración distinta. Las reservas se permiten con hasta 90 días de anticipación y se sugieren horarios cada 10 minutos. Los barberos nuevos necesitan una jornada y los servicios nuevos deben asignarse a quienes los realizan.
+69: El prototipo funciona localmente en http://127.0.0.1:3001. Las instrucciones de instalación están en el README y se resumen en el anexo D. El repositorio remoto sigue siendo un elemento pendiente de la entrega; una dirección local no lo sustituye.
+70: 
+71: Pruebas y resultados
+72: Método de verificación
+73: La ejecución de respaldo se realizó el 23 de septiembre de 2026 con Node.js 24.19.0, MySQL 8.0.45 y Microsoft Edge 153.0.4234.48 sobre Windows. Se utilizó una base temporal independiente, datos ficticios y solicitudes HTTP reales. Al terminar se eliminó únicamente la base creada para las pruebas. El navegador se automatizó con Playwright 1.58.2.
+74: El registro informa 27 resultados aprobados: cuatro casos de reglas básicas, 22 casos dentro del grupo de integración y el resultado global de ese grupo. Por tanto, hay 26 casos ejecutables, no 27 escenarios independientes. El detalle completo y su correspondencia con los requisitos aparecen en los anexos A y B.
+75: 
+76: Rendimiento observado
+77: En una muestra de 20 consultas secuenciales de disponibilidad, sobre una base pequeña de pruebas y conexión local, la mediana fue 16.5 ms y el máximo 25.9 ms. El máximo quedó por debajo de la meta de 2 segundos planteada en RNF-04. La medición corresponde a la respuesta de la API, no al tiempo total de carga de una página ni a una prueba de carga de producción.
+78: Correcciones verificadas
+79: Las pruebas permitieron corregir la identificación accesible de los selectores y asegurar que los periodos contiguos se trataran como una jornada continua. La compilación y el análisis estático del frontend finalizaron sin errores ni advertencias en la revisión del desarrollo. Los resultados respaldan los casos probados, sin demostrar ausencia absoluta de defectos.
+80: 
+81: Evaluación de calidad
+82: La evaluación toma ISO/IEC 25010:2023 como referencia general para organizar atributos y criterios medibles [4]. Se seleccionan aspectos pertinentes para el prototipo y se distinguen los resultados comprobados de las evaluaciones pendientes. No se afirma conformidad integral con la norma ni una certificación.
+83: 
+84: Métricas y alcance de los resultados
+85: La tasa de aprobación de los casos fue 26/26, equivalente a 100 %. Este porcentaje no representa cobertura de código ni cobertura total de requisitos. La prueba de concurrencia obtuvo una sola reserva entre 20 solicitudes para el mismo intervalo. La revisión de interfaz comprobó ausencia de desbordamiento horizontal en los tamaños inspeccionados.
+86: Límites y siguientes validaciones
+87: Antes de usarlo con un negocio real se deben validar políticas de anticipación, cancelación y retrasos; medir con más datos y usuarios; realizar pruebas con clientes; revisar accesibilidad y probar navegadores adicionales. Para un despliegue público también hacen falta HTTPS, credenciales de base de datos adecuadas, respaldo y recuperación. Estas actividades amplían la evaluación local y no cambian la primera entrega.
+88: 
+89: Conclusiones y referencias
+90: Conclusiones
+91: El proyecto convirtió el análisis de la primera entrega en un prototipo que permite reservar y administrar citas. La principal mejora es que la disponibilidad no depende únicamente de la pantalla: se calcula con jornadas, duración, descansos y bloqueos, y se vuelve a validar al guardar.
+92: La cancelación y la reprogramación conservan los registros y sus movimientos. Esto permite explicar qué ocurrió con una cita y evita perder información cuando un cambio es rechazado. La configuración por trabajador y la asignación de servicios mantienen la relación entre lo ofrecido al cliente y la capacidad del negocio.
+93: Los resultados son favorables para la demostración académica. Todavía no permiten afirmar una reducción real de ausencias, satisfacción de clientes o disponibilidad continua. La siguiente validación debe realizarse con reglas acordadas con un encargado, usuarios representativos y un entorno de despliegue definido.
+94: Referencias
+95: [1] INGE00031. (s. f.). Producto Transversal. Ingeniería de Software. Documento de la actividad, páginas 4 a 6.
+96: [2] Oracle. (s. f.). MySQL 8.0 Reference Manual. Locking Reads. https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html
+97: [3] Node.js. (s. f.). Crypto. crypto.scrypt. https://nodejs.org/api/crypto.html#cryptoscryptpassword-salt-keylen-options-callback
+98: [4] ISO e IEC. (2023). ISO/IEC 25010:2023. Systems and software engineering. Systems and software Quality Requirements and Evaluation. Product quality model. Ficha pública del estándar. https://committee.iso.org/standard/78176.html
+99: Fuentes web consultadas el 20 de septiembre de 2026.
+100: Uso de herramientas de apoyo
+101: Se utilizó asistencia de inteligencia artificial para apoyar la implementación y la revisión del código.
+102: Las afirmaciones sobre funcionamiento se vinculan con código y pruebas ejecutadas; no se presentan entrevistas ni resultados de usuarios que no se hayan realizado.
+103: 
+104: 
+105: 
+106: 
+107: 
+108: 
+109: 	

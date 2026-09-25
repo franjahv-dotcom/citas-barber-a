@@ -1,0 +1,38 @@
+✔ Valida fechas reales y rechaza fechas imposibles o con zona horaria ambigua (33.1467ms)
+✔ Los intervalos adyacentes no son cruces; los cruces parciales y completos sí (0.1877ms)
+✔ Normaliza teléfonos sin usarlos como identidad única y valida valores (0.8942ms)
+✔ La aritmética civil conserva minutos y cambia el día correctamente (0.4085ms)
+▶ Integración con MySQL real y recorridos en navegador
+  ✔ Protege agenda, clientes y configuración sin sesión; cookie HttpOnly y SameSite (89.8723ms)
+  ✔ Catálogo público no expone clientes; disponibilidad descuenta descansos y duración (45.1643ms)
+  ✔ Reserva válida, persistencia y rechazo de cruce parcial; permite límite adyacente (154.8927ms)
+  ✔ Veinte reservas simultáneas generan exactamente una cita (380.2751ms)
+  ✔ Distintos barberos pueden atender a la misma hora (28.5485ms)
+  ✔ Valida teléfono obligatorio, fecha pasada, fecha imposible, jornada y anticipación (192.2925ms)
+  ✔ Una reprogramación rechazada mantiene intacta la cita original; una válida conserva su ID (74.9203ms)
+  ✔ Bloqueo señala citas afectadas sin borrarlas e impide nuevas reservas (136.7804ms)
+  ✔ Cancelación conserva historial, libera espacio y no permite reactivar una cita cerrada (75.8964ms)
+  ✔ No completa citas futuras ni marca ausencias antes de hora; procesa citas pasadas (143.4566ms)
+  ✔ Nombre y teléfono identifican coincidencias; teléfonos compartidos conservan clientes distintos (66.6407ms)
+  ✔ Cambio de duración preserva intervalos reservados; servicio inactivo desaparece y no se acepta por API (99.462ms)
+  ✔ Barbero inactivo conserva sus citas y rechaza nuevas; solo ofrece servicios asignados (94.912ms)
+  ✔ Jornadas cruzadas se rechazan; cambiar jornadas señala citas afectadas sin eliminarlas (121.1179ms)
+  ✔ Filtra agenda por fecha, barbero, nombre y estado; paginación validada (27.3135ms)
+  ✔ Periodos adyacentes forman una jornada continua; bloqueos de varios días se respetan (138.5497ms)
+  ✔ Solicitudes de reserva y bloqueo concurrentes mantienen una agenda consistente (47.0209ms)
+  ✔ Consultas habituales responden en menos de dos segundos en la carga de prueba local (335.1692ms)
+  ✔ Consultas parametrizadas no interpretan búsquedas como SQL (17.7586ms)
+  ✔ La inicialización puede repetirse sin duplicar servicios, jornadas ni citas (107.6505ms)
+  ✔ Navegador real: reserva, administración, reprogramación, cancelación e historial (7552.1527ms)
+  ✔ Cambio de contraseña invalida sesiones anteriores; acceso con la nueva contraseña (333.6348ms)
+✔ Integración con MySQL real y recorridos en navegador (13916.029ms)
+ℹ Base de prueba aislada: barberia_test_60de9adea3f7
+ℹ Disponibilidad, 20 consultas secuenciales locales: mediana 16.5 ms, máximo 25.9 ms.
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14319.4103

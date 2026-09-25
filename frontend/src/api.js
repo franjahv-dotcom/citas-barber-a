@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 
 export async function api(path, options = {}) {
   const { body, ...rest } = options;
-  const response = await fetch("/api" + path, {
-    credentials: "same-origin",
+  const response = await fetch("https://backend-barberia-4h38.onrender.com/api" + path, {
+    credentials: "include",
     ...rest,
     headers: {
       "Content-Type": "application/json",

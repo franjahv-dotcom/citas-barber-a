@@ -3,6 +3,19 @@ const path = require("node:path");
 const { HttpError } = require("./domain");
 const { requireAdmin } = require("./auth");
 const app = express();
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  // Permitimos a GitHub Pages comunicarse con el Backend
+  if (origin === "https://franjahv-dotcom.github.io" || origin === "http://localhost:5173") {
+    res.set("Access-Control-Allow-Origin", origin);
+    res.set("Access-Control-Allow-Credentials", "true");
+    res.set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With");
+    res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  next();
+});
+
 app.disable("x-powered-by");
 app.use((req, res, next) => {
   res.set("X-Content-Type-Options", "nosniff");

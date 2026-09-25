@@ -3,9 +3,9 @@ const path = require("node:path");
 const { HttpError } = require("./domain");
 const { requireAdmin } = require("./auth");
 const app = express();
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  // Permitimos a GitHub Pages comunicarse con el Backend
   if (origin === "https://franjahv-dotcom.github.io" || origin === "http://localhost:5173") {
     res.set("Access-Control-Allow-Origin", origin);
     res.set("Access-Control-Allow-Credentials", "true");
@@ -47,7 +47,6 @@ app.use((req, res, next) => {
 });
 app.use("/api/admin", require("./admin-routes"));
 app.use("/api", require("./public-routes"));
-// Preserve the old agenda URL without exposing customer information.
 app.get("/api/appointments", requireAdmin, (req, res) =>
   res.redirect(307, "/api/admin/appointments"),
 );

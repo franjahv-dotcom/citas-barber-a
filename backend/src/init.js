@@ -81,6 +81,12 @@ async function initialize() {
     }
     await q("INSERT INTO migrations (version) VALUES (1)");
   });
+    if (process.env.ADMIN_PASSWORD) {
+    await query("UPDATE admins SET password_hash=? WHERE username=?", [
+      await hashPassword(process.env.ADMIN_PASSWORD),
+      process.env.ADMIN_USERNAME || "admin",
+    ]);
+  }
   if (!(await query("SELECT id FROM admins LIMIT 1")).length) {
     const username = process.env.ADMIN_USERNAME || "admin";
     const password =

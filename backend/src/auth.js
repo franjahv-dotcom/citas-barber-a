@@ -27,11 +27,12 @@ function cookieToken(req) {
 }
 const cookieOptions = {
   httpOnly: true,
-  sameSite: "strict",
-  secure: process.env.COOKIE_SECURE === "true",
+  sameSite: "none",
+  secure: true,
   path: "/",
   maxAge: 8 * 3600000,
 };
+
 async function requireAdmin(req, res, next) {
   const token = cookieToken(req);
   if (!/^[a-f0-9]{64}$/.test(token))
